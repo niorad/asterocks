@@ -1,41 +1,68 @@
 Object = require "libraries/classic/classic"
 Input = require "libraries/boipushy/input"
 Timer = require "libraries/enhanced_timer/EnhancedTimer"
+local _ = require("libraries/moses/moses")
 
 function love.load()
 	local object_files = {}
 	recursiveEnumerate("objects", object_files)
 	requireFiles(object_files)
 	timer = Timer()
-	rect_1 = {x = 400, y = 300, w = 50, h = 200}
-	rect_2 = {x = 400, y = 300, w = 200, h = 50}
-	timer:tween(
-		1,
-		rect_1,
-		{w = 0},
-		"in-out-cubic",
-		function()
-			timer:tween(
-				1,
-				rect_2,
-				{h = 0},
-				"in-out-cubic",
-				function()
-					timer:tween(2, rect_1, {w = 50}, "in-out-cubic")
-					timer:tween(2, rect_2, {h = 50}, "in-out-cubic")
-				end
-			)
-		end
-	)
+	input = Input()
+
+	for k, v in pairs(_G) do
+		print(k, v)
+	end
+
+	rooms = {}
+	current_room = nil
+	input:bind("y", "goto1")
+	input:bind("x", "goto2")
+	input:bind("c", "goto3")
 end
 
 function love.update(dt)
 	timer:update(dt)
+
+	if input:pressed("goto1") then
+		gotoRoom("CircleRoom", "room1")
+	end
+	if input:pressed("goto2") then
+		gotoRoom("RectangleRoom", "room2")
+	end
+	if input:pressed("goto3") then
+		gotoRoom("PolygonRoom", "room3")
+	end
+
+	if current_room then
+		current_room:update(dt)
+	end
 end
 
 function love.draw()
-	love.graphics.rectangle("fill", rect_1.x - rect_1.w / 2, rect_1.y - rect_1.h / 2, rect_1.w, rect_1.h)
-	love.graphics.rectangle("fill", rect_2.x - rect_2.w / 2, rect_2.y - rect_2.h / 2, rect_2.w, rect_2.h)
+	if current_room then
+		current_room:draw(dt)
+	end
+end
+
+function addRoom(room_type, room_name, ...)
+	local room = _G[room_type](room_name, ...)
+	rooms[room_name] = room
+	return room
+end
+
+function gotoRoom(room_type, room_name, ...)
+	if current_room and rooms[room_name] then
+		if current_room.deactivate then
+			current_room:deactivate()
+		end
+		current_room = rooms[room_name]
+		if current_room.activate then
+			current_room:activate()
+		end
+	else
+		current_room = addRoom(room_type, room_name, ...)
+	end
 end
 
 -- brumma
