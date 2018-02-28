@@ -1,39 +1,76 @@
 Object = require "libraries/classic/classic"
 Input = require "libraries/boipushy/input"
 Timer = require "libraries/enhanced_timer/EnhancedTimer"
-local _ = require("libraries/moses/moses")
+Camera = require "libraries/hump/camera"
+Physics = require "libraries/windfield"
+_ = require "libraries/moses/moses"
+require "GameObject"
+require "utils"
 
 function love.load()
+	love.graphics.setDefaultFilter("nearest", "nearest")
+	love.graphics.setLineStyle("rough")
 	local object_files = {}
 	recursiveEnumerate("objects", object_files)
 	requireFiles(object_files)
+	local room_files = {}
+	recursiveEnumerate("rooms", room_files)
+	requireFiles(room_files)
+
 	timer = Timer()
 	input = Input()
+	camera = Camera()
 
-	for k, v in pairs(_G) do
-		print(k, v)
-	end
+	input:bind(
+		"s",
+		function()
+			camera:shake(4, 60, 1)
+		end
+	)
+
+	input:bind(
+		"f1",
+		function()
+			print("Before collection: " .. collectgarbage("count") / 1024)
+			collectgarbage()
+			print("After collection: " .. collectgarbage("count") / 1024)
+			print("Object count: ")
+			local counts = type_count()
+			for k, v in pairs(counts) do
+				print(k, v)
+			end
+			print("----------------------------------------")
+		end
+	)
+	input:bind(
+		"f2",
+		function()
+			gotoRoom("Stage")
+		end
+	)
+
+	input:bind(
+		"f3",
+		function()
+			if (current_room) then
+				current_room:destroy()
+				current_room = nil
+			end
+		end
+	)
+
+	input:bind("left", "left")
+	input:bind("right", "right")
 
 	rooms = {}
 	current_room = nil
-	input:bind("y", "goto1")
-	input:bind("x", "goto2")
-	input:bind("c", "goto3")
+	gotoRoom("Stage")
+	-- resize(3)
 end
 
 function love.update(dt)
 	timer:update(dt)
-
-	if input:pressed("goto1") then
-		gotoRoom("CircleRoom", "room1")
-	end
-	if input:pressed("goto2") then
-		gotoRoom("RectangleRoom", "room2")
-	end
-	if input:pressed("goto3") then
-		gotoRoom("PolygonRoom", "room3")
-	end
-
+	camera:update(dt)
 	if current_room then
 		current_room:update(dt)
 	end
@@ -51,27 +88,23 @@ function addRoom(room_type, room_name, ...)
 	return room
 end
 
-function gotoRoom(room_type, room_name, ...)
-	if current_room and rooms[room_name] then
-		if current_room.deactivate then
-			current_room:deactivate()
-		end
-		current_room = rooms[room_name]
-		if current_room.activate then
-			current_room:activate()
-		end
-	else
-		current_room = addRoom(room_type, room_name, ...)
+function gotoRoom(room_type, ...)
+	if current_room and current_room.destroy then
+		current_room:destroy()
 	end
+	current_room = _G[room_type](...)
+end
+
+function resize(s)
+	love.window.setMode(s * gw, s * gh)
+	sx, sy = s, s
 end
 
 -- brumma
 function requireFiles(files)
 	for _, file in ipairs(files) do
 		local file = file:sub(1, -5)
-		local last_forward_slash_index = file:find("/[^/]*$")
-		local class_name = file:sub(last_forward_slash_index + 1, #file)
-		_G[class_name] = require(file)
+		require(file)
 	end
 end
 
@@ -142,4 +175,45 @@ function love.run()
 			love.timer.sleep(0.001)
 		end
 	end
+end
+function count_all(f)
+	local seen = {}
+	local count_table
+	count_table = function(t)
+		if seen[t] then
+			return
+		end
+		f(t)
+		seen[t] = true
+		for k, v in pairs(t) do
+			if type(v) == "table" then
+				count_table(v)
+			elseif type(v) == "userdata" then
+				f(v)
+			end
+		end
+	end
+	count_table(_G)
+end
+
+function type_count()
+	local counts = {}
+	local enumerate = function(o)
+		local t = type_name(o)
+		counts[t] = (counts[t] or 0) + 1
+	end
+	count_all(enumerate)
+	return counts
+end
+
+global_type_table = nil
+function type_name(o)
+	if global_type_table == nil then
+		global_type_table = {}
+		for k, v in pairs(_G) do
+			global_type_table[v] = k
+		end
+		global_type_table[0] = "table"
+	end
+	return global_type_table[getmetatable(o) or 0] or "Unknown"
 end
