@@ -9,12 +9,12 @@ function Player:new(area, x, y, opts)
 	self.r = -math.pi / 2
 	self.rv = 1.66 * math.pi
 	self.v = 0
-	self.max_v = 10
+	self.max_v = 50
 	self.a = 100
 
 	self.timer:every(
 		0.24,
-		function()
+		function(f)
 			self:shoot()
 		end
 	)
@@ -44,7 +44,6 @@ end
 
 function Player:draw()
 	love.graphics.circle("line", self.x, self.y, self.w)
-	love.graphics.line(self.x, self.y, self.x + 2 * self.w * math.cos(self.r), self.y + 2 * self.w * math.sin(self.r))
 end
 
 function Player:destroy()
@@ -52,7 +51,38 @@ function Player:destroy()
 end
 
 function Player:shoot()
-	local d = 1.2 * self.w
+	local d = self.w
+	self.area:addGameObject(
+		"Projectile",
+		self.x + 1.5 * d * math.cos(self.r),
+		self.y + 1.5 * d * math.sin(self.r),
+		{
+			r = self.r,
+			v = 150,
+			s = 3
+		}
+	)
+	self.area:addGameObject(
+		"Projectile",
+		self.x + 1.5 * d * math.cos(self.r + .3),
+		self.y + 1.5 * d * math.sin(self.r + .3),
+		{
+			r = self.r + .3,
+			v = 150,
+			s = 3
+		}
+	)
+	self.area:addGameObject(
+		"Projectile",
+		self.x + 1.5 * d * math.cos(self.r - .3),
+		self.y + 1.5 * d * math.sin(self.r - .3),
+		{
+			r = self.r - .3,
+			v = 150,
+			s = 3
+		}
+	)
+
 	self.area:addGameObject(
 		"ShootEffect",
 		self.x + d * math.cos(self.r),

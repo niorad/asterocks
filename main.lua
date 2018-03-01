@@ -65,7 +65,7 @@ function love.load()
 	rooms = {}
 	current_room = nil
 	gotoRoom("Stage")
-	-- resize(3)
+	resize(1)
 end
 
 function love.update(dt)
