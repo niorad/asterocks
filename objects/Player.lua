@@ -6,7 +6,7 @@ function Player:new(area, x, y, opts)
 	self.x, self.y = x, y
 	self.w, self.h = 12, 12
 
-	self.r = -math.pi / 2
+	self.r = 0
 	self.rv = 1.66 * math.pi
 	self.v = 0
 	self.max_v = 50
@@ -21,6 +21,13 @@ function Player:new(area, x, y, opts)
 
 	self.collider = self.area.world:newCircleCollider(self.x, self.y, self.w)
 	self.collider:setObject(self)
+
+	input:bind(
+		"p",
+		function()
+			self:die()
+		end
+	)
 end
 
 function Player:update(dt)
@@ -58,27 +65,7 @@ function Player:shoot()
 		self.y + 1.5 * d * math.sin(self.r),
 		{
 			r = self.r,
-			v = 150,
-			s = 3
-		}
-	)
-	self.area:addGameObject(
-		"Projectile",
-		self.x + 1.5 * d * math.cos(self.r + .3),
-		self.y + 1.5 * d * math.sin(self.r + .3),
-		{
-			r = self.r + .3,
-			v = 150,
-			s = 3
-		}
-	)
-	self.area:addGameObject(
-		"Projectile",
-		self.x + 1.5 * d * math.cos(self.r - .3),
-		self.y + 1.5 * d * math.sin(self.r - .3),
-		{
-			r = self.r - .3,
-			v = 150,
+			v = 200,
 			s = 3
 		}
 	)
@@ -92,4 +79,11 @@ function Player:shoot()
 			d = d
 		}
 	)
+end
+
+function Player:die()
+	self.dead = true
+	for i = 1, love.math.random(5, 10) do
+		self.area:addGameObject("ExplodeParticle", self.x, self.y)
+	end
 end

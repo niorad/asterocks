@@ -6,6 +6,7 @@ Physics = require "libraries/windfield"
 _ = require "libraries/moses/moses"
 require "GameObject"
 require "utils"
+require "globals"
 
 function love.load()
 	love.graphics.setDefaultFilter("nearest", "nearest")
@@ -65,7 +66,7 @@ function love.load()
 	rooms = {}
 	current_room = nil
 	gotoRoom("Stage")
-	resize(1)
+	resize(2)
 end
 
 function love.update(dt)
