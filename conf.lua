@@ -2,6 +2,7 @@ gw = 480
 gh = 270
 sx = 1
 sy = 1
+scale_amount = 2
 
 function love.conf(t)
 	t.identity = nil -- The name of the save directory (string)

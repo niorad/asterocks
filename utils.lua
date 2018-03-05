@@ -36,6 +36,12 @@ function slow(amount, duration)
 	timer:tween("slow", duration, _G, {slow_amount = 1}, "in-out-cubic")
 end
 
-function flash(frames)
-	flash_frames = frames
+function flash(seconds)
+	flash_active = true
+	timer:after(
+		seconds,
+		function()
+			flash_active = false
+		end
+	)
 end

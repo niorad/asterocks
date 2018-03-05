@@ -62,13 +62,15 @@ function love.load()
 
 	input:bind("left", "left")
 	input:bind("right", "right")
+	input:bind("up", "up")
+	input:bind("down", "down")
 
 	rooms = {}
 	current_room = nil
 	slow_amount = 1
 
 	gotoRoom("Stage")
-	resize(0.5)
+	resize(scale_amount)
 end
 
 function love.update(dt)
@@ -79,21 +81,16 @@ function love.update(dt)
 	end
 end
 
-function love.draw()
+function love.draw(dt)
 	if current_room then
 		current_room:draw(dt)
 	end
-	if flash_frames then
-		flash_frames = flash_frames - 1
-		if flash_frames == -1 then
-			flash_frames = nil
-		end
-	end
-	if flash_frames then
-		love.graphics.setColor(background_color)
+	if flash_active then
+		love.graphics.setColor(default_color)
 		love.graphics.rectangle("fill", 0, 0, sx * gw, sy * gw)
 		love.graphics.setColor(255, 255, 255)
 	end
+	love.graphics.print(dt, 10, 10)
 end
 
 function addRoom(room_type, room_name, ...)
@@ -180,7 +177,7 @@ function love.run()
 			love.graphics.clear(love.graphics.getBackgroundColor())
 			love.graphics.origin()
 			if love.draw then
-				love.draw()
+				love.draw(dt)
 			end
 			love.graphics.present()
 		end

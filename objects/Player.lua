@@ -11,11 +11,41 @@ function Player:new(area, x, y, opts)
 	self.v = 0
 	self.max_v = 50
 	self.a = 100
+	self.base_max_v = 100
+	self.max_v = self.base_max_v
 
 	self.timer:every(
 		0.24,
 		function(f)
 			self:shoot()
+		end
+	)
+
+	self.timer:every(
+		5,
+		function()
+			self:tick()
+		end
+	)
+
+	self.trail_color = skill_point_color
+	self.timer:every(
+		0.01,
+		function()
+			if self.ship == "Fighter" then
+				self.area:addGameObject(
+					"TrailParticle",
+					self.x - 0.9 * self.w * math.cos(self.r) + 0.2 * self.w * math.cos(self.r - math.pi / 2),
+					self.y - 0.9 * self.w * math.sin(self.r) + 0.2 * self.w * math.sin(self.r - math.pi / 2),
+					{parent = self, r = random(2, 4), d = random(0.15, 0.25), color = self.trail_color}
+				)
+				self.area:addGameObject(
+					"TrailParticle",
+					self.x - 0.9 * self.w * math.cos(self.r) + 0.2 * self.w * math.cos(self.r + math.pi / 2),
+					self.y - 0.9 * self.w * math.sin(self.r) + 0.2 * self.w * math.sin(self.r + math.pi / 2),
+					{parent = self, r = random(2, 4), d = random(0.15, 0.25), color = self.trail_color}
+				)
+			end
 		end
 	)
 
@@ -28,16 +58,77 @@ function Player:new(area, x, y, opts)
 			self:die()
 		end
 	)
+
+	self.ship = "Fighter"
+	self.polygons = {}
+
+	if self.ship == "Fighter" then
+		self.polygons[1] = {
+			self.w,
+			0, -- 1
+			self.w / 2,
+			-self.w / 2, -- 2
+			-self.w / 2,
+			-self.w / 2, -- 3
+			-self.w,
+			0, -- 4
+			-self.w / 2,
+			self.w / 2, -- 5
+			self.w / 2,
+			self.w / 2 -- 6
+		}
+
+		self.polygons[2] = {
+			self.w / 2,
+			-self.w / 2, -- 7
+			0,
+			-self.w, -- 8
+			-self.w - self.w / 2,
+			-self.w, -- 9
+			-3 * self.w / 4,
+			-self.w / 4, -- 10
+			-self.w / 2,
+			-self.w / 2 -- 11
+		}
+
+		self.polygons[3] = {
+			self.w / 2,
+			self.w / 2, -- 12
+			-self.w / 2,
+			self.w / 2, -- 13
+			-3 * self.w / 4,
+			self.w / 4, -- 14
+			-self.w - self.w / 2,
+			self.w, -- 15
+			0,
+			self.w -- 16
+		}
+	end
 end
 
 function Player:update(dt)
 	Player.super.update(self, dt)
+
+	self.max_v = self.base_max_v
+	self.boosting = false
 
 	if input:down("left") then
 		self.r = self.r - self.rv * dt
 	end
 	if input:down("right") then
 		self.r = self.r + self.rv * dt
+	end
+	if input:down("up") then
+		self.boosting = true
+		self.max_v = 1.5 * self.base_max_v
+	end
+	if input:down("down") then
+		self.boosting = true
+		self.max_v = 0.5 * self.base_max_v
+	end
+	self.trail_color = skill_point_color
+	if self.boosting then
+		self.trail_color = boost_color
 	end
 
 	self.v = self.v + self.a * dt
@@ -50,9 +141,23 @@ function Player:update(dt)
 end
 
 function Player:draw()
+	pushRotate(self.x, self.y, self.r)
 	love.graphics.setColor(default_color)
-	love.graphics.circle("line", self.x, self.y, self.w)
-	love.graphics.setColor(255, 255, 255)
+	for unused, polygon in ipairs(self.polygons) do
+		local points =
+			_.map(
+			polygon,
+			function(k, v)
+				if k % 2 == 1 then
+					return self.x + v + random(-1, 1)
+				else
+					return self.y + v + random(-1, 1)
+				end
+			end
+		)
+		love.graphics.polygon("line", points)
+	end
+	love.graphics.pop()
 end
 
 function Player:destroy()
@@ -83,12 +188,16 @@ function Player:shoot()
 	)
 end
 
+function Player:tick()
+	self.area:addGameObject("TickEffect", self.x, self.y, {parent = self})
+end
+
 function Player:die()
 	self.dead = true
 	for i = 1, love.math.random(5, 10) do
 		self.area:addGameObject("ExplodeParticle", self.x, self.y)
 	end
-	flash(4)
+	flash(0.01)
 	slow(0.15, 1)
 	camera:shake(6, 60, 0.4)
 end

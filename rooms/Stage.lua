@@ -26,7 +26,7 @@ end
 
 function Stage:draw()
 	love.graphics.setCanvas(self.main_canvas)
-	love.graphics.clear()
+	love.graphics.clear(background_color)
 	camera:attach(0, 0, gw, gh)
 	if (self.area) then
 		self.area:draw()
