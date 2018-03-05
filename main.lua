@@ -65,21 +65,34 @@ function love.load()
 
 	rooms = {}
 	current_room = nil
+	slow_amount = 1
+
 	gotoRoom("Stage")
-	resize(2)
+	resize(0.5)
 end
 
 function love.update(dt)
-	timer:update(dt)
-	camera:update(dt)
+	timer:update(dt * slow_amount)
+	camera:update(dt * slow_amount)
 	if current_room then
-		current_room:update(dt)
+		current_room:update(dt * slow_amount)
 	end
 end
 
 function love.draw()
 	if current_room then
 		current_room:draw(dt)
+	end
+	if flash_frames then
+		flash_frames = flash_frames - 1
+		if flash_frames == -1 then
+			flash_frames = nil
+		end
+	end
+	if flash_frames then
+		love.graphics.setColor(background_color)
+		love.graphics.rectangle("fill", 0, 0, sx * gw, sy * gw)
+		love.graphics.setColor(255, 255, 255)
 	end
 end
 

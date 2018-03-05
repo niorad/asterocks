@@ -50,7 +50,9 @@ function Player:update(dt)
 end
 
 function Player:draw()
+	love.graphics.setColor(default_color)
 	love.graphics.circle("line", self.x, self.y, self.w)
+	love.graphics.setColor(255, 255, 255)
 end
 
 function Player:destroy()
@@ -86,4 +88,7 @@ function Player:die()
 	for i = 1, love.math.random(5, 10) do
 		self.area:addGameObject("ExplodeParticle", self.x, self.y)
 	end
+	flash(4)
+	slow(0.15, 1)
+	camera:shake(6, 60, 0.4)
 end
