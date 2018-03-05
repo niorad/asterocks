@@ -1,3 +1,4 @@
+require "objects/ships/ships"
 Player = GameObject:extend()
 
 function Player:new(area, x, y, opts)
@@ -13,6 +14,8 @@ function Player:new(area, x, y, opts)
 	self.a = 100
 	self.base_max_v = 100
 	self.max_v = self.base_max_v
+	self.ship = "Coelacanth"
+	self.polygons = getShip(self.ship, self.w)
 
 	self.timer:every(
 		0.24,
@@ -46,6 +49,14 @@ function Player:new(area, x, y, opts)
 					{parent = self, r = random(2, 4), d = random(0.15, 0.25), color = self.trail_color}
 				)
 			end
+			if self.ship == "Coelacanth" then
+				self.area:addGameObject(
+					"TrailParticle",
+					self.x - 1.8 * self.w * math.cos(self.r),
+					self.y - 1.8 * self.w * math.sin(self.r),
+					{parent = self, r = random(.5, 5), d = random(0.35, 0.45), color = self.trail_color}
+				)
+			end
 		end
 	)
 
@@ -58,52 +69,6 @@ function Player:new(area, x, y, opts)
 			self:die()
 		end
 	)
-
-	self.ship = "Fighter"
-	self.polygons = {}
-
-	if self.ship == "Fighter" then
-		self.polygons[1] = {
-			self.w,
-			0, -- 1
-			self.w / 2,
-			-self.w / 2, -- 2
-			-self.w / 2,
-			-self.w / 2, -- 3
-			-self.w,
-			0, -- 4
-			-self.w / 2,
-			self.w / 2, -- 5
-			self.w / 2,
-			self.w / 2 -- 6
-		}
-
-		self.polygons[2] = {
-			self.w / 2,
-			-self.w / 2, -- 7
-			0,
-			-self.w, -- 8
-			-self.w - self.w / 2,
-			-self.w, -- 9
-			-3 * self.w / 4,
-			-self.w / 4, -- 10
-			-self.w / 2,
-			-self.w / 2 -- 11
-		}
-
-		self.polygons[3] = {
-			self.w / 2,
-			self.w / 2, -- 12
-			-self.w / 2,
-			self.w / 2, -- 13
-			-3 * self.w / 4,
-			self.w / 4, -- 14
-			-self.w - self.w / 2,
-			self.w, -- 15
-			0,
-			self.w -- 16
-		}
-	end
 end
 
 function Player:update(dt)
