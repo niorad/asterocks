@@ -3,6 +3,9 @@ Stage = Object:extend()
 function Stage:new()
 	self.area = Area(self)
 	self.area:addPhysicsWorld()
+	self.area.world:addCollisionClass("Player")
+	self.area.world:addCollisionClass("Projectile", {ignores = {"Projectile"}})
+	self.area.world:addCollisionClass("Collectable", {ignores = {"Collectable", "Projectile"}})
 	self.timer = Timer()
 	self.main_canvas = love.graphics.newCanvas(gw, gh)
 	self.player = self.area:addGameObject("Player", gw / 2, gh / 2)
@@ -11,6 +14,12 @@ function Stage:new()
 		function()
 			self.player.dead = true
 			self.player = nil
+		end
+	)
+	input:bind(
+		"a",
+		function()
+			self.area:addGameObject("Ammo", 100, 100)
 		end
 	)
 end

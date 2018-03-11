@@ -4,3 +4,4 @@ ammo_color = {123, 200, 164}
 boost_color = {76, 195, 217}
 hp_color = {241, 103, 69}
 skill_point_color = {202, 28, 71}
+player_wobbly = .5
